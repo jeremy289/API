@@ -9,10 +9,10 @@
 import Foundation
 
 struct WeatherResults: Identifiable {
-   var id: String
-   let name:String
-   let coord: Float
-   let weather: String
-   let wind: String
+    var id: Int
+    let country:String
+    let name:String
+    let weather: String
+    //let wind: String
 }
 
