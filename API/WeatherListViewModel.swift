@@ -11,23 +11,25 @@ import SwiftyJSON
 
 struct WeatherListViewModel: View {
     @ObservedObject var results = getweather()
-    @State var show = false
-    @State var url = ""
+    /*@State var show = false
+    @State var url = ""*/
     var body: some View {
-                List(results.data){result in
+        ForEach(results.records){ result in
             VStack(alignment: .leading, spacing: 10){
-                
-                Text(result.name).font(.system(size: 12)).foregroundColor(Color.gray)
-                Text(result.weather).fontWeight(.black)
+                Text(result.locationName)
+                    .font(.system(size: 12))
+                    .foregroundColor(Color.gray)
+                Text(result.startTime)
+                    .fontWeight(.black)
+                Text(result.parameterName)
+                    .fontWeight(.black)
                 //Text("winds: "+result.wind).font(.system(size: 15)).padding()
                 
                 
             }
         }
-        }
-        
-    
     }
+}
 
 
 
@@ -39,28 +41,49 @@ struct WeatherListViewModel_Previews: PreviewProvider {
 
 
 class getweather:ObservableObject{
-    @Published var data = [WeatherResults]()
+    @Published var records = [WeatherResultsdata]()
     init(){
-        let url = "http://api.openweathermap.org/data/2.5/group?id=1665148,1678228,1548444,1668399,1668355,1673820&units=metric&appid=bdb56bc1ef58c981e76bd0a4d7c6dbd1"
+        let url = "https://opendata.cwb.gov.tw/api/v1/rest/datastore/F-C0032-001?Authorization=CWB-C3E3EB7A-B9F3-471F-81BB-E75BC74A6463&locationName=%E8%87%BA%E5%8C%97%E5%B8%82,%E6%96%B0%E5%8C%97%E5%B8%82,%E6%A1%83%E5%9C%92%E5%B8%82,%E8%87%BA%E4%B8%AD%E5%B8%82,%E8%87%BA%E5%8D%97%E5%B8%82,%E9%AB%98%E9%9B%84%E5%B8%82,%E5%9F%BA%E9%9A%86%E5%B8%82"
         let session = URLSession(configuration: .default)
-               session.dataTask(with: URL(string: url)!){(list, _, err) in
+               session.dataTask(with: URL(string: url)!){(records, _, err) in
+                    let decoder = JSONDecoder()
+                    let dateFormatter = DateFormatter()
+                    dateFormatter.dateFormat = "yyyy-MM-ddthh:mm:ss"
+                    decoder.dateDecodingStrategy = .formatted(dateFormatter)
                    if err != nil{
                        print((err?.localizedDescription)!)
                        return
                    }
-                   let json = try! JSON(data: list!)
-                   let temp = json["list"].array!
+                   let json = try! JSON(data: records!)
+                   print("1")
+                   let temp = json["records"]["location"].array!
+                   
+                   
                 for i in temp {
-                    let id = i["id"].intValue
-                    let country = i["sys"]["country"].stringValue
-                    let name = i["name"].stringValue
-                    let weather = i["weather"]["main"].stringValue
-                    DispatchQueue.main.async {
-                        self.data.append(WeatherResults(id: id, country:country, name: name, weather: weather))
+                    let id = i["locationName"].stringValue
+                    let locationName = i["locationName"].stringValue
+                    let temp2 = json["records"]["location"]["weatherElement"].array!
+                    for j in temp2{
+                        let elementName = j["weatherElement"]["elementName"].stringValue
+                        let temp3 = json["time"].array!
+                        for k in temp3{
+                            let startTime = k["startTime"].stringValue
+                            let parameterName = k["parameter"]["parameterName"].stringValue
+                            DispatchQueue.main.async {
+                                self.records.append(WeatherResultsdata(id: id, locationName: locationName, startTime: startTime,parameterName: parameterName,elementName:elementName))
+                            }
+                        }
                     }
+                    /*let startTime = i["weatherElement"]["time"]["startTime"].stringValue
+                    let parameterName = i["weatherElement"]["time"]["parameter"]["parameterName"].stringValue
+                    let elementName = i["weatherElement"]["elementName"].stringValue
+                    DispatchQueue.main.async {
+                        self.records.append(WeatherResultsdata(id: id, locationName: locationName, startTime: startTime,parameterName: parameterName,elementName:elementName))
+                    }
+                    print(parameterName)*/
                 }
                
                    
-               }.resume()
+            }.resume()
     }
 }

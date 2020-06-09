@@ -8,11 +8,15 @@
 
 import Foundation
 
-struct WeatherResults: Identifiable {
-    var id: Int
-    let country:String
-    let name:String
-    let weather: String
-    //let wind: String
+struct WeatherResultsdata : Identifiable{
+    //var id: ObjectIdentifier
+    let id :String
+    //var id:String { locationName }
+    let locationName:String
+    let startTime:String
+    let parameterName:String
+    let elementName:String
+    
 }
+    
 
